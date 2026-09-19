@@ -79,6 +79,7 @@ import {AudioUnitType} from "@opendaw/studio-enums"
 import {Surface} from "@/ui/surface/Surface"
 import {SoftwareMIDIPanel} from "@/ui/software-midi/SoftwareMIDIPanel"
 import {Mixdowns} from "@/service/Mixdowns"
+import {MixOTronDialogs} from "@/project/MixOTronDialogs"
 import {ShadertoyState} from "@/ui/shadertoy/ShadertoyState"
 import {CodeEditorState} from "@/ui/code-editor/CodeEditorState"
 import {RoomAwareness} from "@/service/RoomAwareness"
@@ -276,6 +277,23 @@ export class StudioService implements ProjectEnv {
                 if (status === "rejected" && !Errors.isAbort(error)) {
                     console.warn(error)
                     RuntimeNotifier.notify({message: "Export failed.", icon: "Warning"})
+                }
+                AudioContexts.resume(this.audioContext).then()
+            })
+    }
+
+    async uploadToMixOTron() {
+        return this.#projectProfileService.getValue()
+            .ifSome(async (profile) => {
+                await this.audioContext.suspend()
+                const {status, value, error} = await Promises.tryCatch(Mixdowns.uploadToMixOTron(profile))
+                if (status === "rejected") {
+                    if (!Errors.isAbort(error)) {
+                        console.warn(error)
+                        RuntimeNotifier.notify({message: "Upload to Mix-O-Tron failed.", icon: "Warning"})
+                    }
+                } else {
+                    await MixOTronDialogs.showUploadSuccess(value)
                 }
                 AudioContexts.resume(this.audioContext).then()
             })
