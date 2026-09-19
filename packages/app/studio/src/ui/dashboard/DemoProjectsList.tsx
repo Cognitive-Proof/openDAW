@@ -5,7 +5,7 @@ import {Await, createElement} from "@opendaw/lib-jsx"
 import {Colors} from "@opendaw/studio-enums"
 import {StudioService} from "@/service/StudioService"
 import {ThreeDots} from "@/ui/spinner/ThreeDots"
-import {DemoProjectJson} from "@/ui/dashboard/DemoProjectJson"
+import {DemoProjectJson, OpenDawMusicProxyPath} from "@/ui/dashboard/DemoProjectJson"
 import {DemoProject} from "@/ui/dashboard/DemoProject"
 import {network, Promises} from "@opendaw/lib-runtime"
 import {ProjectBundle} from "@opendaw/studio-core"
@@ -42,7 +42,7 @@ const ids = [
     "cab976763f0" // Vapor Run
 ]
 
-const listUrl = `https://api.opendaw.studio/music/list-by-ids.php?ids=${ids.join(",")}`
+const listUrl = `${OpenDawMusicProxyPath}/list-by-ids.php?ids=${ids.join(",")}`
 
 const loadDemoProject = async (service: StudioService, json: DemoProjectJson) => {
     if (!await service.projectProfileService.approveLosingChanges()) {return}
@@ -53,7 +53,7 @@ const loadDemoProject = async (service: StudioService, json: DemoProjectJson) =>
     if (!approved) {return}
     const dialog = RuntimeNotifier.progress({headline: "Loading Demo Project"})
     const {status, value: arrayBuffer, error} = await Promises.tryCatch(
-        fetch(`https://api.opendaw.studio/music/uploads/${json.id}/project.odb`)
+        fetch(`${OpenDawMusicProxyPath}/uploads/${json.id}/project.odb`)
             .then(network.progress(progress => dialog.message = `Downloading bundle file... (${(progress * 100).toFixed(1)}%)`))
             .then(response => response.arrayBuffer()))
     dialog.terminate()

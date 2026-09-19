@@ -1,7 +1,7 @@
 import css from "./DemoProject.sass?inline"
 import {Html} from "@opendaw/lib-dom"
 import {createElement} from "@opendaw/lib-jsx"
-import {DemoProjectJson} from "@/ui/dashboard/DemoProjectJson"
+import {DemoProjectJson, OpenDawMusicProxyPath} from "@/ui/dashboard/DemoProjectJson"
 import {Bytes, Exec, Strings} from "@opendaw/lib-std"
 
 const className = Html.adoptStyleSheet(css, "DemoProject")
@@ -15,11 +15,11 @@ type Construct = {
 
 export const DemoProject = ({json, load, extraClassName, cover}: Construct) => {
     const coverUrl = cover ?? (json.hasCover
-        ? `https://api.opendaw.studio/music/cover.php?id=${json.id}&preview=true`
+        ? `${OpenDawMusicProxyPath}/cover.php?id=${json.id}&preview=true`
         : "./empty.svg")
     return (
         <div className={Html.buildClassList(className, extraClassName)} onclick={load}>
-            <img src={coverUrl} alt="cover" crossOrigin="anonymous"/>
+            <img src={coverUrl} alt="cover"/>
             <div className="meta">
                 <div className="title">
                     <span className="name">{json.metadata.name}</span>

@@ -14,4 +14,13 @@ server {
     location / {
         try_files $uri $uri/ /index.html;
     }
+
+    # Same-origin proxy for the Demos section (see DemoProjectJson.tsx's OpenDawMusicProxyPath) —
+    # api.opendaw.studio's CORS allowlist only trusts opendaw.studio/dev.opendaw.studio/localhost,
+    # not this fork's Cloud Run domain, so the browser must see these as same-origin requests.
+    location /proxy/opendaw-music/ {
+        proxy_ssl_server_name on;
+        proxy_set_header Host api.opendaw.studio;
+        proxy_pass https://api.opendaw.studio/music/;
+    }
 }
