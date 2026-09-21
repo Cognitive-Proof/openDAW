@@ -74,7 +74,12 @@ export default defineConfig(({command}) => {
                 allow: [resolve(__dirname, "../../../")]
             },
             proxy: {
-                "/manuals": {target: "https://localhost:8081", secure: false}
+                "/manuals": {target: "https://localhost:8081", secure: false},
+                "/proxy/opendaw-music": {
+                    target: "https://api.opendaw.studio",
+                    changeOrigin: true,
+                    rewrite: path => path.replace(/^\/proxy\/opendaw-music/, "/music")
+                }
             },
             hmr: {
                 overlay: false

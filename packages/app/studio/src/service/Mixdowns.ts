@@ -1,17 +1,22 @@
-import {assert, DefaultObservableValue, Errors, Option, RuntimeNotifier} from "@opendaw/lib-std"
+import {assert, DefaultObservableValue, Errors, Option, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {AudioData, WavFile} from "@opendaw/lib-dsp"
 import {
     ExternalLib,
     FFmpegConverter,
     FFmpegWorker,
     OfflineEngineRenderer,
+    Project,
     ProjectMeta,
-    ProjectProfile
+    ProjectProfile,
+    SampleStorage,
+    Workers
 } from "@opendaw/studio-core"
 import {Files} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
-import {ExportConfiguration} from "@opendaw/studio-adapters"
+import {ExportConfiguration, SampleLoader} from "@opendaw/studio-adapters"
+import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Dialogs} from "@/ui/components/dialogs"
+import {MixOTronCredentials, MixOTronDialogs} from "@/project/MixOTronDialogs"
 
 export namespace Mixdowns {
     export const exportMixdown = async ({project: source, meta}: ProjectProfile): Promise<void> => {
@@ -90,6 +95,88 @@ export namespace Mixdowns {
             RuntimeNotifier.notify({message: "Export failed.", icon: "Warning"})
             return
         }
+    }
+
+    export type Ingredient = { name: string, sha256: string }
+
+    export const uploadToMixOTron = async ({project: source, meta}: ProjectProfile): Promise<string> => {
+        const credentials = await MixOTronDialogs.ensureConnection()
+        if (credentials.isEmpty()) {throw Errors.AbortError}
+        const project = source.copy()
+        const abortController = new AbortController()
+        const progress = new DefaultObservableValue(0.0)
+        const dialog = RuntimeNotifier.progress({
+            headline: "Rendering mixdown...",
+            progress,
+            cancel: () => abortController.abort()
+        })
+        const result = await Promises.tryCatch(OfflineEngineRenderer
+            .start(project, Option.None, progress, abortController.signal, 48_000))
+        dialog.terminate()
+        if (result.status === "rejected") {throw result.error}
+        const wav = WavFile.encodeFloats(result.value)
+        const hashDialog = RuntimeNotifier.progress({headline: "Hashing ingredients..."})
+        const ingredientsResult = await Promises.tryCatch(hashIngredients(project))
+        hashDialog.terminate()
+        if (ingredientsResult.status === "rejected") {throw ingredientsResult.error}
+        return uploadMixdown(credentials.unwrap(), wav, meta.name, ingredientsResult.value)
+    }
+
+    const hashIngredients = async (project: Project): Promise<ReadonlyArray<Ingredient>> => {
+        const audioFileBoxes = project.boxGraph.boxes().filter(box => box instanceof AudioFileBox)
+        return Promise.all(audioFileBoxes.map(async ({address: {uuid}}) => {
+            const loader: SampleLoader = project.sampleManager.getOrCreate(uuid)
+            await awaitSampleLoaded(loader)
+            const path = `${SampleStorage.Folder}/${UUID.toString(uuid)}/audio.wav`
+            const [bytes, sampleMeta] = await Promise.all([Workers.Opfs.read(path), SampleStorage.get().loadMeta(uuid)])
+            const digest = await crypto.subtle.digest("SHA-256",
+                bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer)
+            const sha256 = Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, "0")).join("")
+            return {name: sampleMeta.name, sha256}
+        }))
+    }
+
+    const awaitSampleLoaded = (loader: SampleLoader): Promise<void> =>
+        loader.state.type === "loaded" ? Promise.resolve() : new Promise<void>((resolve, reject) => {
+            const subscription = loader.subscribe(state => {
+                if (state.type === "loaded") {
+                    resolve()
+                    subscription.terminate()
+                } else if (state.type === "error") {
+                    reject(new Error(state.reason))
+                    subscription.terminate()
+                }
+            })
+        })
+
+    const uploadMixdown = async ({baseUrl, token}: MixOTronCredentials, wav: ArrayBuffer, name: string,
+                                 ingredients: ReadonlyArray<Ingredient>): Promise<string> => {
+        const formData = new FormData()
+        formData.append("file", new Blob([wav], {type: "audio/wav"}), `${name}.wav`)
+        formData.append("name", name)
+        if (ingredients.length > 0) {formData.append("ingredients", JSON.stringify(ingredients))}
+        const progress = new DefaultObservableValue(0.0)
+        const dialog = RuntimeNotifier.progress({headline: "Uploading to Mix-O-Tron...", progress})
+        const {resolve, reject, promise} = Promise.withResolvers<string>()
+        const xhr = new XMLHttpRequest()
+        xhr.upload.addEventListener("progress", event => {
+            if (event.lengthComputable) {progress.setValue(event.loaded / event.total)}
+        })
+        xhr.addEventListener("load", () => {
+            if (xhr.status === 200 || xhr.status === 201) {
+                const response = JSON.parse(xhr.responseText)
+                resolve(response.url)
+            } else {
+                console.warn(xhr.status, xhr.responseText)
+                const error = JSON.parse(xhr.responseText)
+                reject(new Error(error.error || "Upload failed"))
+            }
+        })
+        xhr.addEventListener("error", () => reject(new Error("Network error")))
+        xhr.open("POST", `${baseUrl}/api/link/upload`)
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`)
+        xhr.send(formData)
+        return promise.finally(() => dialog.terminate())
     }
 
     const saveWavFile = async (audioData: AudioData, meta: ProjectMeta) => {

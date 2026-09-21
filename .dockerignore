@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+.git
+.github
+.idea
+.cache
+*.log
+crates/target
+certs
+tmp
