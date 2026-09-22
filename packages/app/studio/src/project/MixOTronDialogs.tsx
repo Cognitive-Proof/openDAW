@@ -33,7 +33,7 @@ export namespace MixOTronDialogs {
         okText: "Ok"
     })
 
-    const showCredentialsDialog = (): Promise<MixOTronCredentials> => {
+    export const showCredentialsDialog = (): Promise<MixOTronCredentials> => {
         const {resolve, reject, promise} = Promise.withResolvers<MixOTronCredentials>()
         const inputUrl: HTMLInputElement =
             <input className="default" type="text" autocomplete="url" value={localStorage.getItem(BaseUrlKey) ?? ""}

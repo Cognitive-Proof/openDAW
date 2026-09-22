@@ -253,6 +253,13 @@ export class StudioService implements ProjectEnv {
             })
     }
 
+    async reconnectMixOTron() {
+        const {status} = await Promises.tryCatch(MixOTronDialogs.showCredentialsDialog())
+        if (status === "resolved") {
+            RuntimeNotifier.notify({message: "Mix-O-Tron connection updated.", icon: "Checkbox"})
+        }
+    }
+
     async exportStems() {
         return this.#projectProfileService.getValue()
             .ifSome(async (profile) => {

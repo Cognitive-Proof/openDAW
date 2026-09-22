@@ -70,6 +70,8 @@ export const populateStudioMenu = (service: StudioService) => {
                                 .setTriggerProcedure(() => service.exportStems()),
                             MenuItem.default({label: "Upload to Mix-O-Tron...", selectable: service.hasProfile})
                                 .setTriggerProcedure(() => service.uploadToMixOTron()),
+                            MenuItem.default({label: "Reconnect Mix-O-Tron..."})
+                                .setTriggerProcedure(() => service.reconnectMixOTron()),
                             MenuItem.default({label: "Project Bundle...", selectable: service.hasProfile})
                                 .setTriggerProcedure(() => service.exportBundle()),
                             MenuItem.default({label: "DAWproject...", selectable: service.hasProfile})
