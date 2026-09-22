@@ -15,12 +15,33 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Same-origin proxy for the Demos section (see DemoProjectJson.tsx's OpenDawMusicProxyPath) —
-    # api.opendaw.studio's CORS allowlist only trusts opendaw.studio/dev.opendaw.studio/localhost,
-    # not this fork's Cloud Run domain, so the browser must see these as same-origin requests.
-    location /proxy/opendaw-music/ {
+    # Same-origin proxies for openDAW's own backend subdomains — none of them send an
+    # Access-Control-Allow-Origin covering this fork's domain (api/assets restrict to
+    # opendaw.studio/dev.opendaw.studio/localhost; package sends no CORS headers at all), so the
+    # browser must see these as same-origin requests. Covers: Demos, Publish, visitor/room-stats
+    # beacons, error logging, and the preset/sample/soundfont browsers and AI model downloads
+    # (see each's OpenDawApiProxyPath / OpenDawAssetsProxyPath / etc. usage).
+    location /proxy/opendaw-api/ {
         proxy_ssl_server_name on;
         proxy_set_header Host api.opendaw.studio;
-        proxy_pass https://api.opendaw.studio/music/;
+        proxy_pass https://api.opendaw.studio/;
+    }
+
+    location /proxy/opendaw-assets/ {
+        proxy_ssl_server_name on;
+        proxy_set_header Host assets.opendaw.studio;
+        proxy_pass https://assets.opendaw.studio/;
+    }
+
+    location /proxy/opendaw-package/ {
+        proxy_ssl_server_name on;
+        proxy_set_header Host package.opendaw.studio;
+        proxy_pass https://package.opendaw.studio/;
+    }
+
+    location /proxy/opendaw-logs/ {
+        proxy_ssl_server_name on;
+        proxy_set_header Host logs.opendaw.studio;
+        proxy_pass https://logs.opendaw.studio/;
     }
 }

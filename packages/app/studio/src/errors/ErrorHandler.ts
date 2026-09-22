@@ -303,7 +303,7 @@ export class ErrorHandler {
             error: {...error, stack: error.stack?.slice(0, maxStackSize)},
             logs: LogBuffer.get()
         } satisfies ErrorLog)
-        fetch("https://logs.opendaw.studio/log.php", {
+        fetch("/proxy/opendaw-logs/log.php", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body

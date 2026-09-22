@@ -267,7 +267,7 @@ const createHtdemucsTask = (key: string, model: ModelDescriptor): TaskDefinition
  * assets.opendaw.studio. Verified working in ORT-Web (WebGPU + WASM EPs).
  */
 export const StemSeparationTask = createHtdemucsTask("stem-separation", {
-    url: "https://assets.opendaw.studio/models/htdemucs/v4/model.onnx",
+    url: "/proxy/opendaw-assets/models/htdemucs/v4/model.onnx",
     sha256: "d2b401f322558cd57d67a752ed7be3fa55178a0626011eda8ac7bb74e17280c0",
     bytes: 250_000_000,
     version: "v4-smank"
@@ -279,7 +279,7 @@ export const StemSeparationTask = createHtdemucsTask("stem-separation", {
  * separation quality. Self-hosted on assets.opendaw.studio.
  */
 export const StemSeparationAltTask = createHtdemucsTask("stem-separation-alt", {
-    url: "https://assets.opendaw.studio/models/htdemucs-jx/v4/model.onnx",
+    url: "/proxy/opendaw-assets/models/htdemucs-jx/v4/model.onnx",
     sha256: "0cf9f378b3a736efacafe09b8c07aafbb3109568c274ffb7b963b540aa1978d2",
     bytes: 304_330_587,
     version: "v4-jx"

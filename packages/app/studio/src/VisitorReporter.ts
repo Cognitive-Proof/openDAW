@@ -1,4 +1,4 @@
-const API_URL = "https://api.opendaw.studio/users/count.php"
+const API_URL = "/proxy/opendaw-api/users/count.php"
 
 // No payload: the server derives a daily anonymous id from the request itself (HMAC with a
 // secret discarded at end of day). Nothing is stored on or read from the visitor's device.

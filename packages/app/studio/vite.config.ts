@@ -75,10 +75,25 @@ export default defineConfig(({command}) => {
             },
             proxy: {
                 "/manuals": {target: "https://localhost:8081", secure: false},
-                "/proxy/opendaw-music": {
+                "/proxy/opendaw-api": {
                     target: "https://api.opendaw.studio",
                     changeOrigin: true,
-                    rewrite: path => path.replace(/^\/proxy\/opendaw-music/, "/music")
+                    rewrite: path => path.replace(/^\/proxy\/opendaw-api/, "")
+                },
+                "/proxy/opendaw-assets": {
+                    target: "https://assets.opendaw.studio",
+                    changeOrigin: true,
+                    rewrite: path => path.replace(/^\/proxy\/opendaw-assets/, "")
+                },
+                "/proxy/opendaw-package": {
+                    target: "https://package.opendaw.studio",
+                    changeOrigin: true,
+                    rewrite: path => path.replace(/^\/proxy\/opendaw-package/, "")
+                },
+                "/proxy/opendaw-logs": {
+                    target: "https://logs.opendaw.studio",
+                    changeOrigin: true,
+                    rewrite: path => path.replace(/^\/proxy\/opendaw-logs/, "")
                 }
             },
             hmr: {

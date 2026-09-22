@@ -2,7 +2,7 @@ import {UUID} from "@opendaw/lib-std"
 
 export type RoomResultStatus = "success" | "sync_timeout" | "socket_error" | "abort" | "unknown"
 
-const ENDPOINT = "https://api.opendaw.studio/rooms/room-counter.php"
+const ENDPOINT = "/proxy/opendaw-api/rooms/room-counter.php"
 
 export const newRoomSessionId = (): string => UUID.toString(UUID.generate())
 

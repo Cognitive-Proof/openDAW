@@ -88,9 +88,9 @@ type RoomResultBreakdown = {
 export const fetchRoomStats = async (): Promise<RoomStats> => {
     const [results, duration] = await Promise.all([
         fetchJson<Record<string, RoomResultBreakdown>>(
-            "https://api.opendaw.studio/rooms/rooms-result.json", {mode: "cors", cache: "no-store"}).catch(() => ({})),
+            "/proxy/opendaw-api/rooms/rooms-result.json", {mode: "cors", cache: "no-store"}).catch(() => ({})),
         fetchJson<Record<string, number>>(
-            "https://api.opendaw.studio/rooms/rooms-duration.json", {mode: "cors", cache: "no-store"}).catch(() => ({}))
+            "/proxy/opendaw-api/rooms/rooms-duration.json", {mode: "cors", cache: "no-store"}).catch(() => ({}))
     ])
     const counts: Record<string, number> = {}
     for (const [date, breakdown] of Object.entries(results)) {
@@ -223,7 +223,7 @@ export const fetchErrorStats = async (): Promise<ErrorStats> => {
     const cached = cacheGet<ErrorStats>(ERROR_CACHE_KEY, ERROR_TTL)
     if (cached.nonEmpty()) return cached.unwrap()
     type StatusResponse = { Total: number, Fixed: number, Unfixed: number, Ratio: string }
-    const data = await fetchJson<StatusResponse>("https://logs.opendaw.studio/status.php")
+    const data = await fetchJson<StatusResponse>("/proxy/opendaw-logs/status.php")
     const stats: ErrorStats = {
         total: data.Total,
         fixed: data.Fixed,
@@ -237,7 +237,7 @@ export const fetchErrorStats = async (): Promise<ErrorStats> => {
 // unique.json: daily-secret counts from count.php, legacy visitors.json merged in by migrate.php
 export const fetchVisitorStats = async (): Promise<DailySeries> => {
     const data = await fetchJson<Record<string, number>>(
-        "https://api.opendaw.studio/users/unique.json", {mode: "cors"})
+        "/proxy/opendaw-api/users/unique.json", {mode: "cors"})
     return sortByDate(data)
 }
 

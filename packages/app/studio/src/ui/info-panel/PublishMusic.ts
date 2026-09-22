@@ -62,7 +62,7 @@ export namespace PublishMusic {
         })
         xhr.addEventListener("error", () => reject(new Error("Network error")))
         xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")))
-        xhr.open("POST", "https://api.opendaw.studio/music/upload.php")
+        xhr.open("POST", "/proxy/opendaw-api/music/upload.php")
         xhr.send(formData)
         return promise
     }
@@ -70,7 +70,7 @@ export namespace PublishMusic {
     export const deleteMusic = async (token: string): Promise<void> => {
         const formData = new FormData()
         formData.append("token", token)
-        const response = await fetch("https://api.opendaw.studio/music/delete.php", {
+        const response = await fetch("/proxy/opendaw-api/music/delete.php", {
             method: "POST",
             body: formData
         })

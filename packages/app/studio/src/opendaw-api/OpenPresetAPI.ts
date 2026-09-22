@@ -7,8 +7,8 @@ import {base64Credentials, OpenDAWHeaders} from "./OpenDAWHeaders"
 import {PresetMeta} from "@opendaw/studio-core"
 
 export class OpenPresetAPI {
-    static readonly ApiRoot = "https://api.opendaw.studio/presets"
-    static readonly FileRoot = "https://assets.opendaw.studio/presets"
+    static readonly ApiRoot = "/proxy/opendaw-api/presets"
+    static readonly FileRoot = "/proxy/opendaw-assets/presets"
 
     @Lazy
     static get(): OpenPresetAPI {return new OpenPresetAPI()}

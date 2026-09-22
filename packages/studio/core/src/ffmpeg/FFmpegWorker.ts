@@ -65,7 +65,10 @@ class Loader {
         ffmpeg.on("progress", event => {
             this.#progressNotifier.notify(event.progress)
         })
-        const baseURL = "https://package.opendaw.studio" // mirror of https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm
+        // Same-origin path proxied to package.opendaw.studio (mirror of
+        // https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm) — that host sends no
+        // Access-Control-Allow-Origin at all, so a direct cross-origin fetch fails from any domain.
+        const baseURL = "/proxy/opendaw-package"
         console.debug("[FFmpeg] Downloading core files...")
         const downloadWithProgress = async (url: string): Promise<ArrayBuffer> => {
             const response = await fetch(url)

@@ -65,7 +65,7 @@ export const TempoDetectionTask = defineTask<TempoDetectionInput, TempoDetection
         // (see scripts/download-inference-models.sh `convert_tempo_cnn`).
         // Input  [N, 40, 256, 1]  — 40 mel bands × 256 frames × 1 channel
         // Output [N, 256]          — softmax over BPM bins 30..285 (1 BPM step)
-        url: "https://assets.opendaw.studio/models/tempo-cnn/v0/model.onnx",
+        url: "/proxy/opendaw-assets/models/tempo-cnn/v0/model.onnx",
         sha256: "38b4915b35c46f72e072a7c93ab4b7e280404133e2ca94f9cbcf5ace15c7a321",
         bytes: 11_705_795,
         version: "v0-cnn"
