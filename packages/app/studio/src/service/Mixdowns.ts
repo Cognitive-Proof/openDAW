@@ -114,12 +114,20 @@ export namespace Mixdowns {
             .start(project, Option.None, progress, abortController.signal, 48_000))
         dialog.terminate()
         if (result.status === "rejected") {throw result.error}
-        const wav = WavFile.encodeFloats(result.value)
+        // Cloud Run (and Cloudflare, if the instance sits behind it) caps request bodies well under
+        // the size of an uncompressed WAV mixdown — Mp3 keeps uploads reliably small, and it's one of
+        // Mix-O-Tron's own documented supported input formats for authoring a Content Credential.
+        const ffmpeg = await loadFFmepg()
+        const mp3Progress = new DefaultObservableValue(0.0)
+        const mp3Dialog = RuntimeNotifier.progress({headline: "Encoding Mp3...", progress: mp3Progress})
+        const mp3 = await ffmpeg.mp3Converter()
+            .convert(new Blob([WavFile.encodeFloats(result.value)]), value => mp3Progress.setValue(value))
+        mp3Dialog.terminate()
         const hashDialog = RuntimeNotifier.progress({headline: "Hashing ingredients..."})
         const ingredientsResult = await Promises.tryCatch(hashIngredients(project))
         hashDialog.terminate()
         if (ingredientsResult.status === "rejected") {throw ingredientsResult.error}
-        return uploadMixdown(credentials.unwrap(), wav, meta.name, ingredientsResult.value)
+        return uploadMixdown(credentials.unwrap(), mp3, meta.name, ingredientsResult.value)
     }
 
     const hashIngredients = async (project: Project): Promise<ReadonlyArray<Ingredient>> => {
@@ -149,10 +157,10 @@ export namespace Mixdowns {
             })
         })
 
-    const uploadMixdown = async ({baseUrl, token}: MixOTronCredentials, wav: ArrayBuffer, name: string,
+    const uploadMixdown = async ({baseUrl, token}: MixOTronCredentials, mp3: ArrayBuffer, name: string,
                                  ingredients: ReadonlyArray<Ingredient>): Promise<string> => {
         const formData = new FormData()
-        formData.append("file", new Blob([wav], {type: "audio/wav"}), `${name}.wav`)
+        formData.append("file", new Blob([mp3], {type: "audio/mpeg"}), `${name}.mp3`)
         formData.append("name", name)
         if (ingredients.length > 0) {formData.append("ingredients", JSON.stringify(ingredients))}
         const progress = new DefaultObservableValue(0.0)
