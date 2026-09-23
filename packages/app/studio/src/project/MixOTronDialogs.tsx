@@ -7,6 +7,18 @@ import {Dialogs} from "@/ui/components/dialogs"
 
 export type MixOTronCredentials = { baseUrl: string, token: string }
 
+// Trailing paths people paste instead of the bare origin — the /dashboard/link page shows the
+// Link token next to the "Endpoint URL", so both are equally easy to copy by mistake.
+const KnownTrailingPaths = ["/api/link/upload", "/dashboard/link"]
+
+const normalizeBaseUrl = (raw: string): string => {
+    let url = raw.trim().replace(/\/+$/, "")
+    for (const path of KnownTrailingPaths) {
+        if (url.endsWith(path)) {url = url.slice(0, -path.length)}
+    }
+    return url.replace(/\/+$/, "")
+}
+
 export namespace MixOTronDialogs {
     const BaseUrlKey = "mixotron.server-url"
     const TokenKey = "mixotron.link-token"
@@ -42,7 +54,7 @@ export namespace MixOTronDialogs {
             <input className="default" type="password" autocomplete="off" value={localStorage.getItem(TokenKey) ?? ""}
                    placeholder="Link token"/>
         const approve = () => {
-            const baseUrl = inputUrl.value.trim().replace(/\/+$/, "")
+            const baseUrl = normalizeBaseUrl(inputUrl.value)
             const token = inputToken.value.trim()
             if (baseUrl.length === 0 || token.length === 0) {
                 Dialogs.info({headline: "Missing input", message: "Server URL and Link token are required."}).finally()
